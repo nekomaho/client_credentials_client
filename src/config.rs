@@ -3,12 +3,24 @@ use yaml_rust::YamlLoader;
 
 #[derive(Debug, Clone)]
 pub struct Config {
-    pub oauth: OauthConfig,
+    pub oauth: Vec<OauthConfig>,
     pub token: TokenConfig,
     pub api: ApiConfig,
 }
 
 trait FetchValue {
+    fn value(
+        config_yaml: &yaml_rust::yaml::Yaml,
+        element: &str,
+    ) -> Result<String, i32> {
+        match config_yaml[element].as_str() {
+            Some(value) => Ok(value.to_string()),
+            None => {
+                println!("{} is empty", element);
+                Err(1)
+            }
+        }
+    }
     fn fetch_value(
         config_yaml: &yaml_rust::yaml::Yaml,
         config_type: &str,
@@ -37,6 +49,7 @@ trait FetchValue {
 
 #[derive(Debug, Clone)]
 pub struct OauthConfig {
+    pub name: String,
     pub client_id: String,
     pub client_secret: String,
     pub token_url: String,
@@ -84,7 +97,7 @@ impl Config {
         let config = &config_yaml[0];
 
         Ok(Config {
-            oauth: OauthConfig::new(config)?,
+            oauth: OauthConfig::load(config)?,
             token: TokenConfig::new(config)?,
             api: ApiConfig::new(config)?,
         })
@@ -92,12 +105,36 @@ impl Config {
 }
 
 impl OauthConfig {
-    pub fn new(config: &yaml_rust::yaml::Yaml) -> Result<Self, i32> {
-        Ok(OauthConfig {
-            client_id: OauthConfig::fetch_value(config, "oauth", "client_id")?,
-            client_secret: OauthConfig::fetch_value(config, "oauth", "client_secret")?,
-            token_url: OauthConfig::fetch_value(config, "oauth", "token_url")?,
-        })
+    pub fn load(config: &yaml_rust::yaml::Yaml) -> Result<Vec<Self>, i32> {
+        let mut oauth_settings: Vec<Self> = Vec::new();
+        let oauth_vec = match config["oauth"].as_vec() {
+            Some(result) => result,
+            None => {
+                println!("Not found oauth hash");
+                return Err(1)
+            }
+        };
+
+        for config_element in oauth_vec {
+            let oauth = OauthConfig::new(
+                &OauthConfig::value(&config_element, "name")?,
+                &OauthConfig::value(&config_element, "client_id")?,
+                &OauthConfig::value(&config_element, "client_secret")?,
+                &OauthConfig::value(&config_element, "token_url")?,
+            );
+            oauth_settings.push(oauth);
+        }
+
+        Ok(oauth_settings)
+    }
+
+    pub fn new(name: &str, client_id: &str, client_secret: &str, token_url: &str) -> Self {
+        OauthConfig {
+            name: name.to_string(),
+            client_id: client_id.to_string(),
+            client_secret: client_secret.to_string(),
+            token_url: token_url.to_string(),
+        }
     }
 }
 
