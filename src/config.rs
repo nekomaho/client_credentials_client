@@ -1,5 +1,6 @@
 use std::fs;
 use yaml_rust::YamlLoader;
+use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
 pub struct Config {
@@ -65,7 +66,7 @@ pub struct ApiConfig {
     pub method: String,
     pub url: String,
     pub content_type: String,
-    pub body: String,
+    pub body: HashMap<String, String>,
 }
 
 impl FetchValue for ApiConfig {}
@@ -144,11 +145,27 @@ impl TokenConfig {
 
 impl ApiConfig {
     pub fn new(config: &yaml_rust::yaml::Yaml) -> Result<Self, i32> {
+        let mut bodies = HashMap::new();
+        let empty_body = &Vec::new();
+        let api_body_config = match config["api"]["body"].as_vec() {
+            Some(result) => result,
+            None => empty_body
+        };
+        for request in api_body_config {
+            bodies.insert(
+                ApiConfig::fetch_value(request, &vec!["name"])?,
+                match request["request"].as_str() {
+                    Some(result) => result.to_string(),
+                    None => "".to_string(),
+                }
+            );
+        }
+
         Ok(ApiConfig {
             method: ApiConfig::fetch_value(config, &vec!["api", "method"])?,
             url: ApiConfig::fetch_value(config, &vec!["api", "url"])?,
             content_type: ApiConfig::fetch_value(config, &vec!["api", "content_type"])?,
-            body: ApiConfig::fetch_value_allow_empty(config, "api", "body"),
+            body: bodies,
         })
     }
 }

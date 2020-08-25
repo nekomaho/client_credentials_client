@@ -42,7 +42,7 @@ fn run() -> Result<i32, i32> {
                 }
             };
 
-            let api = api::Api::new(&config, &secret);
+            let api = api::Api::new(&config, &secret, &oauth_config_setting.name);
             api.send_request()?;
 
             println!("END: {} phase", &oauth_config_setting.name);
