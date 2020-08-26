@@ -1,13 +1,13 @@
 use reqwest::header::*;
 
 pub struct Api {
-    config: crate::config::Config,
+    config: crate::config::ApiConfig,
     oauth_name: String,
     access_token: String,
 }
 
 impl Api {
-    pub fn new(config: &crate::config::Config, access_token: &str, oauth_name: &str) -> Self {
+    pub fn new(config: &crate::config::ApiConfig, access_token: &str, oauth_name: &str) -> Self {
         Api {
             config: config.clone(),
             oauth_name: oauth_name.to_string(),
@@ -17,13 +17,13 @@ impl Api {
 
     pub fn send_request(&self) -> Result<i32, i32> {
         let mut headers = HeaderMap::new();
-        headers.insert(CONTENT_TYPE, self.config.api.content_type.parse().unwrap());
+        headers.insert(CONTENT_TYPE, self.config.content_type.parse().unwrap());
 
-        Ok(match &*self.config.api.method {
+        Ok(match &*self.config.method {
             "get" => self.get(headers)?,
             "post" => self.post(headers)?,
             _ => {
-                println!("{} is not support method", self.config.api.method);
+                println!("{} is not support method", self.config.method);
                 return Err(1);
             }
         })
@@ -32,9 +32,9 @@ impl Api {
     #[tokio::main]
     async fn post(&self, headers: HeaderMap) -> Result<i32, i32> {
         let req = reqwest::Client::new();
-        let body = self.config.api.body.get(&self.oauth_name).unwrap();
+        let body = &self.config.variable.get(&self.oauth_name).unwrap().body;
         let res = req
-            .post(&self.config.api.url)
+            .post(&self.config.variable.get(&self.oauth_name).unwrap().url)
             .bearer_auth(self.access_token.to_string())
             .headers(headers)
             .body(body.to_string())
@@ -49,14 +49,14 @@ impl Api {
                 };
                 println!(
                     "post error {}: response={}",
-                    &self.config.api.url, status_code
+                    &self.config.variable.get(&self.oauth_name).unwrap().url, status_code
                 );
                 return Err(1);
             }
         };
 
-        println!("{}", res_result.status());
-        println!("{}", res_result.text().await.unwrap());
+        println!("RECV: {} status={}", &self.oauth_name, res_result.status());
+        println!("RECV: {} body={}", &self.oauth_name, res_result.text().await.unwrap());
 
         Ok(0)
     }
@@ -65,7 +65,7 @@ impl Api {
     async fn get(&self, headers: HeaderMap) -> Result<i32, i32> {
         let req = reqwest::Client::new();
         let res = req
-            .get(&self.config.api.url)
+            .get(&self.config.variable.get(&self.oauth_name).unwrap().url)
             .bearer_auth(self.access_token.to_string())
             .headers(headers)
             .send()
@@ -79,14 +79,14 @@ impl Api {
                 };
                 println!(
                     "get error {}: response={}",
-                    &self.config.api.url, status_code
+                    &self.config.variable.get(&self.oauth_name).unwrap().url, status_code
                 );
                 return Err(1);
             }
         };
 
-        println!("{}", res_result.status());
-        println!("{}", res_result.text().await.unwrap());
+        println!("RECV: {} status={}", &self.oauth_name, res_result.status());
+        println!("RECV: {} body={}", &self.oauth_name, res_result.text().await.unwrap());
 
         Ok(0)
     }

@@ -6,7 +6,7 @@ use std::collections::HashMap;
 pub struct Config {
     pub oauth: Vec<OauthConfig>,
     pub token: TokenConfig,
-    pub api: ApiConfig,
+    pub api: Vec<ApiConfig>,
 }
 
 trait FetchValue {
@@ -63,13 +63,22 @@ impl FetchValue for TokenConfig {}
 
 #[derive(Debug, Clone)]
 pub struct ApiConfig {
+    pub api_name: String,
     pub method: String,
-    pub url: String,
     pub content_type: String,
-    pub body: HashMap<String, String>,
+    pub variable: HashMap<String, ApiVariableConfig>,
 }
 
 impl FetchValue for ApiConfig {}
+
+#[derive(Debug, Clone)]
+pub struct ApiVariableConfig {
+    pub name: String,
+    pub url: String,
+    pub body: String,
+}
+
+impl FetchValue for ApiVariableConfig {}
 
 const CONFIG_FILE: &str = "client_credentials_client.yml";
 
@@ -96,7 +105,7 @@ impl Config {
         Ok(Config {
             oauth: OauthConfig::load(config)?,
             token: TokenConfig::new(config)?,
-            api: ApiConfig::new(config)?,
+            api: ApiConfig::load(config)?,
         })
     }
 }
@@ -144,28 +153,87 @@ impl TokenConfig {
 }
 
 impl ApiConfig {
-    pub fn new(config: &yaml_rust::yaml::Yaml) -> Result<Self, i32> {
-        let mut bodies = HashMap::new();
-        let empty_body = &Vec::new();
-        let api_body_config = match config["api"]["body"].as_vec() {
+    pub fn load(config: &yaml_rust::yaml::Yaml) -> Result<Vec<Self>, i32> {
+        let mut api_settings: Vec<Self> = Vec::new();
+        let api_vec = match config["api"].as_vec() {
             Some(result) => result,
-            None => empty_body
+            None => {
+                println!("Not found api array");
+                return Err(1)
+            }
         };
-        for request in api_body_config {
-            bodies.insert(
-                ApiConfig::fetch_value(request, &vec!["name"])?,
-                match request["request"].as_str() {
-                    Some(result) => result.to_string(),
-                    None => "".to_string(),
-                }
+
+        for config_element in api_vec {
+            let api = ApiConfig::new(
+                &ApiConfig::fetch_value(&config_element, &vec!["api_name"])?,
+                &ApiConfig::fetch_value(&config_element, &vec!["method"])?,
+                &ApiConfig::fetch_value(&config_element, &vec!["content_type"])?,
+                config_element,
             );
+            let api_config = match api {
+                Ok(result) => result,
+                Err(_) => {
+                    println!("Not found api element");
+                    return Err(1)
+                }
+            };
+            api_settings.push(api_config);
+        }
+
+        Ok(api_settings)
+    }
+
+    pub fn new(api_name: &str, method: &str, content_type: &str, config: &yaml_rust::yaml::Yaml) -> Result<Self, i32> {
+        let api_variable_configs = match ApiVariableConfig::load(config) {
+                Ok(result) => result,
+                Err(_) => {
+                    println!("Not found api element");
+                    return Err(1)
+                }
+        };
+
+        let mut api_variable_config_hash = HashMap::new();
+        for api_variable in api_variable_configs {
+          api_variable_config_hash.insert(api_variable.name.to_string(), api_variable);
         }
 
         Ok(ApiConfig {
-            method: ApiConfig::fetch_value(config, &vec!["api", "method"])?,
-            url: ApiConfig::fetch_value(config, &vec!["api", "url"])?,
-            content_type: ApiConfig::fetch_value(config, &vec!["api", "content_type"])?,
-            body: bodies,
+            api_name: api_name.to_string(),
+            method: method.to_string(),
+            content_type: content_type.to_string(),
+            variable: api_variable_config_hash,
         })
+    }
+}
+
+impl ApiVariableConfig {
+   pub fn load(config: &yaml_rust::yaml::Yaml) -> Result<Vec<Self>, i32> {
+        let mut api_variable_configs: Vec<Self> = Vec::new();
+        let api_variables = match config["variable"].as_vec() {
+            Some(result) => result,
+            None => {
+                println!("Need variable field");
+                return Err(1);
+            }
+        };
+
+        for variable_config in api_variables {
+            let api_variable_config = ApiVariableConfig::new(
+                &ApiVariableConfig::fetch_value(&variable_config, &vec!["name"])?,
+                &ApiVariableConfig::fetch_value(&variable_config, &vec!["url"])?,
+                &ApiVariableConfig::fetch_value(&variable_config, &vec!["body"])?,
+            );
+            api_variable_configs.push(api_variable_config);
+        }
+
+        Ok(api_variable_configs)
+    }
+
+    pub fn new(name: &str, url: &str, body: &str) -> Self {
+        ApiVariableConfig {
+            name: name.to_string(),
+            url: url.to_string(),
+            body: body.to_string()
+        }
     }
 }

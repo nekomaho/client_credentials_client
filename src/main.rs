@@ -4,8 +4,8 @@ mod config;
 use oauth2::basic::BasicClient;
 use oauth2::reqwest::http_client;
 use oauth2::{AuthUrl, ClientId, ClientSecret, Scope, TokenResponse, TokenUrl};
-use std::thread;
 use std::sync::Arc;
+use std::thread;
 
 fn run() -> Result<i32, i32> {
     let search_config = Arc::new(config::Config::new()?);
@@ -42,10 +42,14 @@ fn run() -> Result<i32, i32> {
                 }
             };
 
-            let api = api::Api::new(&config, &secret, &oauth_config_setting.name);
-            api.send_request()?;
+            for api_config in &config.api {
+                println!("SEND: {} {}", &oauth_config_setting.name, &api_config.api_name);
+                let api = api::Api::new(&api_config, &secret, &oauth_config_setting.name);
+                api.send_request()?;
 
-            println!("END: {} phase", &oauth_config_setting.name);
+                println!("END: {} phase", &oauth_config_setting.name);
+            }
+
             Ok(0)
         });
         results.push(handle);
