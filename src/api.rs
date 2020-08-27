@@ -1,17 +1,20 @@
 use reqwest::header::*;
+use crate::color::coloring;
 
 pub struct Api {
     config: crate::config::ApiConfig,
     oauth_name: String,
     access_token: String,
+    count: u32,
 }
 
 impl Api {
-    pub fn new(config: &crate::config::ApiConfig, access_token: &str, oauth_name: &str) -> Self {
+    pub fn new(config: &crate::config::ApiConfig, access_token: &str, oauth_name: &str, count: u32) -> Self {
         Api {
             config: config.clone(),
             oauth_name: oauth_name.to_string(),
             access_token: access_token.to_string(),
+            count: count,
         }
     }
 
@@ -55,8 +58,10 @@ impl Api {
             }
         };
 
-        println!("RECV: {} status={}", &self.oauth_name, res_result.status());
-        println!("RECV: {} body={}", &self.oauth_name, res_result.text().await.unwrap());
+        let recv_status_output = format!("RECV: {} status={}", &self.oauth_name, &res_result.status());
+        println!("{}", coloring(&recv_status_output, self.count));
+        let recv_body_output = format!("RECV: {} body={}", &self.oauth_name, &res_result.text().await.unwrap());
+        println!("{}", coloring(&recv_body_output, self.count));
 
         Ok(0)
     }
@@ -85,8 +90,10 @@ impl Api {
             }
         };
 
-        println!("RECV: {} status={}", &self.oauth_name, res_result.status());
-        println!("RECV: {} body={}", &self.oauth_name, res_result.text().await.unwrap());
+        let recv_status_output = format!("RECV: {} status={}", &self.oauth_name, &res_result.status());
+        println!("{}", coloring(&recv_status_output, self.count));
+        let recv_body_output = format!("RECV: {} body={}", &self.oauth_name, &res_result.text().await.unwrap());
+        println!("{}", coloring(&recv_body_output, self.count));
 
         Ok(0)
     }

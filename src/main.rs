@@ -1,11 +1,13 @@
 mod api;
 mod config;
+mod color;
 
 use oauth2::basic::BasicClient;
 use oauth2::reqwest::http_client;
 use oauth2::{AuthUrl, ClientId, ClientSecret, Scope, TokenResponse, TokenUrl};
 use std::sync::Arc;
 use std::thread;
+use color::coloring;
 
 fn run() -> Result<i32, i32> {
     let search_config = Arc::new(config::Config::new()?);
@@ -16,7 +18,9 @@ fn run() -> Result<i32, i32> {
         let oauth_config_setting = Arc::new(set_oauth_config_setting.clone());
 
         let handle = thread::spawn(move || {
-            println!("START: {} phase", &oauth_config_setting.name);
+            let count = oauth_config_setting.count;
+            let start_output = format!("START: {} phase", &oauth_config_setting.name);
+            println!("{}", coloring(&start_output, count));
 
             let client_secret = &oauth_config_setting.client_secret;
             let client_id = &oauth_config_setting.client_id;
@@ -43,11 +47,13 @@ fn run() -> Result<i32, i32> {
             };
 
             for api_config in &config.api {
-                println!("SEND: {} {}", &oauth_config_setting.name, &api_config.api_name);
-                let api = api::Api::new(&api_config, &secret, &oauth_config_setting.name);
+                let send_output = format!("SEND: {} {}", &oauth_config_setting.name ,&api_config.api_name);
+                println!("{}", coloring(&send_output, count));
+                let api = api::Api::new(&api_config, &secret, &oauth_config_setting.name, count);
                 api.send_request()?;
 
-                println!("END: {} phase", &oauth_config_setting.name);
+                let end_output = format!("END: {} phase", &oauth_config_setting.name);
+                println!("{}", coloring(&end_output, count));
             }
 
             Ok(0)

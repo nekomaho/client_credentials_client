@@ -73,6 +73,7 @@ pub struct OauthConfig {
     pub client_id: String,
     pub client_secret: String,
     pub token_url: String,
+    pub count: u32,
 }
 
 impl FetchValue for OauthConfig {}
@@ -131,6 +132,7 @@ impl Config {
             api: ApiConfig::load(config)?,
         })
     }
+
 }
 
 impl OauthConfig {
@@ -143,6 +145,7 @@ impl OauthConfig {
                 return Err(1);
             }
         };
+        let mut counter = 0;
 
         for config_element in oauth_vec {
             let env = &OauthConfig::fetch_value_as_bool(&config_element, &vec!["env"])?;
@@ -182,20 +185,23 @@ impl OauthConfig {
                 name,
                 &client_id,
                 &client_secret,
-                token_url
+                token_url,
+                counter
             );
             oauth_settings.push(oauth);
+            counter += 1;
         }
 
         Ok(oauth_settings)
     }
 
-    pub fn new(name: &str, client_id: &str, client_secret: &str, token_url: &str) -> Self {
+    pub fn new(name: &str, client_id: &str, client_secret: &str, token_url: &str, counter: u32) -> Self {
         OauthConfig {
             name: name.to_string(),
             client_id: client_id.to_string(),
             client_secret: client_secret.to_string(),
             token_url: token_url.to_string(),
+            count: counter
         }
     }
 }
