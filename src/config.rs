@@ -1,6 +1,7 @@
-use std::fs;
-use yaml_rust::YamlLoader;
 use std::collections::HashMap;
+use std::fs;
+use std::env;
+use yaml_rust::YamlLoader;
 
 #[derive(Debug, Clone)]
 pub struct Config {
@@ -12,17 +13,39 @@ pub struct Config {
 trait FetchValue {
     fn fetch_value(
         config_yaml: &yaml_rust::yaml::Yaml,
-        config_types: &Vec<&str>
+        config_types: &Vec<&str>,
     ) -> Result<String, i32> {
         let mut config = config_yaml;
         for config_type in config_types {
-          config =  &config[*config_type];
+            config = &config[*config_type];
         }
 
         match config.as_str() {
             Some(value) => Ok(value.to_string()),
             None => {
-                let mut output = String::new(); 
+                let mut output = String::new();
+                for config_type in config_types {
+                    output = format!("{} {}", config_type, output);
+                }
+                println!("{} is empty", output);
+                Err(1)
+            }
+        }
+    }
+
+    fn fetch_value_as_bool(
+        config_yaml: &yaml_rust::yaml::Yaml,
+        config_types: &Vec<&str>,
+    ) -> Result<bool, i32> {
+        let mut config = config_yaml;
+        for config_type in config_types {
+            config = &config[*config_type];
+        }
+
+        match config.as_bool() {
+            Some(value) => Ok(value),
+            None => {
+                let mut output = String::new();
                 for config_type in config_types {
                     output = format!("{} {}", config_type, output);
                 }
@@ -117,16 +140,49 @@ impl OauthConfig {
             Some(result) => result,
             None => {
                 println!("Not found oauth hash");
-                return Err(1)
+                return Err(1);
             }
         };
 
         for config_element in oauth_vec {
+            let env = &OauthConfig::fetch_value_as_bool(&config_element, &vec!["env"])?;
+
+            let name = &OauthConfig::fetch_value(&config_element, &vec!["name"])?;
+            let client_id = match *env {
+                true => {
+                    let env_value = &OauthConfig::fetch_value(&config_element, &vec!["client_id"])?;
+                    match env::var(env_value) {
+                        Ok(result) => result.to_string(),
+                        Err(_) => {
+                            println!("{} is not found", env_value);
+                            return Err(1)
+                        }
+
+                    }
+                },
+                false => OauthConfig::fetch_value(&config_element, &vec!["client_id"])?.to_string()
+            };
+
+            let client_secret = match *env {
+                true => {
+                    let env_value = &OauthConfig::fetch_value(&config_element, &vec!["client_secret"])?;
+                    match env::var(env_value) {
+                        Ok(result) => result.to_string(),
+                        Err(_) => {
+                            println!("{} is not found", env_value);
+                            return Err(1)
+                        }
+                    }
+                },
+                false => OauthConfig::fetch_value(&config_element, &vec!["client_secret"])?.to_string()
+            };
+            let token_url = &OauthConfig::fetch_value(&config_element, &vec!["token_url"])?;
+
             let oauth = OauthConfig::new(
-                &OauthConfig::fetch_value(&config_element, &vec!["name"])?,
-                &OauthConfig::fetch_value(&config_element, &vec!["client_id"])?,
-                &OauthConfig::fetch_value(&config_element, &vec!["client_secret"])?,
-                &OauthConfig::fetch_value(&config_element, &vec!["token_url"])?,
+                name,
+                &client_id,
+                &client_secret,
+                token_url
             );
             oauth_settings.push(oauth);
         }
@@ -159,7 +215,7 @@ impl ApiConfig {
             Some(result) => result,
             None => {
                 println!("Not found api array");
-                return Err(1)
+                return Err(1);
             }
         };
 
@@ -174,7 +230,7 @@ impl ApiConfig {
                 Ok(result) => result,
                 Err(_) => {
                     println!("Not found api element");
-                    return Err(1)
+                    return Err(1);
                 }
             };
             api_settings.push(api_config);
@@ -183,18 +239,23 @@ impl ApiConfig {
         Ok(api_settings)
     }
 
-    pub fn new(api_name: &str, method: &str, content_type: &str, config: &yaml_rust::yaml::Yaml) -> Result<Self, i32> {
+    pub fn new(
+        api_name: &str,
+        method: &str,
+        content_type: &str,
+        config: &yaml_rust::yaml::Yaml,
+    ) -> Result<Self, i32> {
         let api_variable_configs = match ApiVariableConfig::load(config) {
-                Ok(result) => result,
-                Err(_) => {
-                    println!("Not found api element");
-                    return Err(1)
-                }
+            Ok(result) => result,
+            Err(_) => {
+                println!("Not found api element");
+                return Err(1);
+            }
         };
 
         let mut api_variable_config_hash = HashMap::new();
         for api_variable in api_variable_configs {
-          api_variable_config_hash.insert(api_variable.name.to_string(), api_variable);
+            api_variable_config_hash.insert(api_variable.name.to_string(), api_variable);
         }
 
         Ok(ApiConfig {
@@ -207,7 +268,7 @@ impl ApiConfig {
 }
 
 impl ApiVariableConfig {
-   pub fn load(config: &yaml_rust::yaml::Yaml) -> Result<Vec<Self>, i32> {
+    pub fn load(config: &yaml_rust::yaml::Yaml) -> Result<Vec<Self>, i32> {
         let mut api_variable_configs: Vec<Self> = Vec::new();
         let api_variables = match config["variable"].as_vec() {
             Some(result) => result,
@@ -233,7 +294,7 @@ impl ApiVariableConfig {
         ApiVariableConfig {
             name: name.to_string(),
             url: url.to_string(),
-            body: body.to_string()
+            body: body.to_string(),
         }
     }
 }
