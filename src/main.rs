@@ -14,10 +14,7 @@ fn run() -> Result<i32, i32> {
     let mut secrets = Vec::new();
     let mut results: Vec<std::thread::JoinHandle<Result<i32, i32>>> = Vec::new();
 
-    for set_oauth_config_setting in &search_config.oauth {
-        let config = search_config.clone();
-        let oauth_config_setting = Arc::new(set_oauth_config_setting.clone());
-
+    for oauth_config_setting in &search_config.oauth {
         let count = oauth_config_setting.count;
         let client_secret = &oauth_config_setting.client_secret;
         let client_id = &oauth_config_setting.client_id;
@@ -33,7 +30,7 @@ fn run() -> Result<i32, i32> {
             Some(TokenUrl::new(token_url.to_string()).unwrap()),
         );
 
-        let scope = &config.token.scope;
+        let scope = &search_config.token.scope;
         let token_result = client
             .exchange_client_credentials()
             .add_scope(Scope::new(scope.to_string()))
