@@ -59,7 +59,11 @@ api:
 After writing the configuration file, you can send requests in parallel to the specified endpoints as follows.
 ```bash
 $ client_credentials_client
-
+START GET TOKEN:: client1
+END GET TOKEN:: client1
+START GET TOKEN:: client2
+END GET TOKEN:: client2
+START PARALLEL
 START: client1 phase
 START: client2 phase
 SEND: client1 post api
@@ -70,6 +74,7 @@ RECV: client2 status=202 Accepted
 RECV: client2 body={"status":"ok"}
 END: client1 phase
 END: client2 phase
+END PARALLEL
 ```
 
 # License
