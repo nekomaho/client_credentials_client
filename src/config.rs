@@ -72,7 +72,6 @@ pub struct OauthConfig {
     pub name: String,
     pub client_id: String,
     pub client_secret: String,
-    pub token_url: String,
     pub count: u32,
 }
 
@@ -80,6 +79,7 @@ impl FetchValue for OauthConfig {}
 
 #[derive(Debug, Clone)]
 pub struct TokenConfig {
+    pub token_url: String,
     pub scope: String,
 }
 
@@ -179,13 +179,11 @@ impl OauthConfig {
                 },
                 false => OauthConfig::fetch_value(&config_element, &vec!["client_secret"])?.to_string()
             };
-            let token_url = &OauthConfig::fetch_value(&config_element, &vec!["token_url"])?;
 
             let oauth = OauthConfig::new(
                 name,
                 &client_id,
                 &client_secret,
-                token_url,
                 counter
             );
             oauth_settings.push(oauth);
@@ -195,12 +193,11 @@ impl OauthConfig {
         Ok(oauth_settings)
     }
 
-    pub fn new(name: &str, client_id: &str, client_secret: &str, token_url: &str, counter: u32) -> Self {
+    pub fn new(name: &str, client_id: &str, client_secret: &str, counter: u32) -> Self {
         OauthConfig {
             name: name.to_string(),
             client_id: client_id.to_string(),
             client_secret: client_secret.to_string(),
-            token_url: token_url.to_string(),
             count: counter
         }
     }
@@ -209,6 +206,7 @@ impl OauthConfig {
 impl TokenConfig {
     pub fn new(config: &yaml_rust::yaml::Yaml) -> Result<Self, i32> {
         Ok(TokenConfig {
+            token_url: TokenConfig::fetch_value(config, &vec!["token", "token_url"])?,
             scope: TokenConfig::fetch_value(config, &vec!["token", "scope"])?,
         })
     }

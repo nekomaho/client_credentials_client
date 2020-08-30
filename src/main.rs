@@ -18,7 +18,7 @@ fn run() -> Result<i32, i32> {
         let count = oauth_config_setting.count;
         let client_secret = &oauth_config_setting.client_secret;
         let client_id = &oauth_config_setting.client_id;
-        let token_url = &oauth_config_setting.token_url;
+        let token_url = &search_config.token.token_url;
 
         let start_preparation_output = format!("START GET TOKEN: {}", &oauth_config_setting.name);
         println!("{}", coloring(&start_preparation_output, count));
