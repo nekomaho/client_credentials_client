@@ -2,14 +2,14 @@ use reqwest::header::*;
 use crate::color::coloring;
 
 pub struct Api {
-    config: crate::config::ApiConfig,
+    config: crate::config::api_config::ApiConfig,
     oauth_name: String,
     access_token: String,
     count: u32,
 }
 
 impl Api {
-    pub fn new(config: &crate::config::ApiConfig, access_token: &str, oauth_name: &str, count: u32) -> Self {
+    pub fn new(config: &crate::config::api_config::ApiConfig, access_token: &str, oauth_name: &str, count: u32) -> Self {
         Api {
             config: config.clone(),
             oauth_name: oauth_name.to_string(),
