@@ -42,15 +42,4 @@ pub trait FetchValue {
             }
         }
     }
-
-    fn fetch_value_allow_empty(
-        config_yaml: &yaml_rust::yaml::Yaml,
-        config_type: &str,
-        element: &str,
-    ) -> String {
-        match config_yaml[config_type][element].as_str() {
-            Some(value) => value.to_string(),
-            None => "".to_string(),
-        }
-    }
 }
