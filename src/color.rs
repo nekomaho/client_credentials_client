@@ -1,5 +1,13 @@
 use colored::*;
 
+#[macro_export]
+macro_rules! color_println {
+    ($color_count:expr, $fmt:expr, $($arg:tt)*) => (
+        let output = format!($fmt, $($arg)*);
+        println!("{}", coloring(&output, $color_count))
+    );
+}
+
 pub fn coloring(args: &str, count: u32) -> ColoredString {
     let count_mod = count % 5;
     match count_mod {

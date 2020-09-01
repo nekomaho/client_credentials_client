@@ -20,8 +20,7 @@ fn run() -> Result<i32, i32> {
         let client_id = &oauth_config_setting.client_id;
         let token_url = &search_config.token.token_url;
 
-        let start_preparation_output = format!("START GET TOKEN: {}", &oauth_config_setting.name);
-        println!("{}", coloring(&start_preparation_output, count));
+        color_println!(count, "START GET TOKEN: {}", &oauth_config_setting.name);
 
         let client = BasicClient::new(
             ClientId::new(client_id.to_string()),
@@ -44,8 +43,7 @@ fn run() -> Result<i32, i32> {
             }
         };
 
-        let end_preparation_output = format!("END GET TOKEN: {}", &oauth_config_setting.name);
-        println!("{}", coloring(&end_preparation_output, count));
+        color_println!(count, "END GET TOKEN: {}", &oauth_config_setting.name);
 
         secrets.push(secret);
     }
@@ -59,21 +57,15 @@ fn run() -> Result<i32, i32> {
         let secret = Arc::new(secrets[count as usize].clone());
 
         let handle = thread::spawn(move || {
-            let start_output = format!("START: {} phase", &oauth_config_setting.name);
-            println!("{}", coloring(&start_output, count));
+            color_println!(count, "START: {} phase", &oauth_config_setting.name);
 
             for api_config in &config.api {
-                let send_output = format!(
-                    "SEND: {} {}",
-                    &oauth_config_setting.name, &api_config.api_name
-                );
-                println!("{}", coloring(&send_output, count));
+                color_println!(count, "SEND: {} {}", &oauth_config_setting.name, &api_config.api_name);
                 let api = api::Api::new(&api_config, &secret, &oauth_config_setting.name, count);
                 api.send_request()?;
             }
 
-            let end_output = format!("END: {} phase", &oauth_config_setting.name);
-            println!("{}", coloring(&end_output, count));
+            color_println!(count, "END: {} phase", &oauth_config_setting.name);
 
             Ok(0)
         });
