@@ -8,10 +8,7 @@ fn run() -> Result<i32, i32> {
 }
 
 fn main() {
-    match run() {
-        Ok(_) => (),
-        Err(code) => {
-            std::process::exit(code);
-        }
-    };
+    if let Err(code) = run() {
+        std::process::exit(code);
+    }
 }
