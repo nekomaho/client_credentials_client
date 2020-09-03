@@ -5,9 +5,9 @@ pub mod api_config;
 
 use std::fs;
 use yaml_rust::YamlLoader;
-use crate::config::oauth_config::OauthConfig;
-use crate::config::token_config::TokenConfig;
-use crate::config::api_config::ApiConfig;
+use self::oauth_config::OauthConfig;
+use self::token_config::TokenConfig;
+use self::api_config::ApiConfig;
 
 #[derive(Debug, Clone)]
 pub struct Config {
