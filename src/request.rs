@@ -11,9 +11,20 @@ use std::thread;
 
 pub fn request() -> Result<i32, i32> {
     let search_config = Arc::new(config::Config::new()?);
-    let mut secrets = Vec::new();
-    let mut results: Vec<std::thread::JoinHandle<Result<i32, i32>>> = Vec::new();
+    let mut secrets: Vec<String> = Vec::new();
 
+    get_token(&search_config, &mut secrets)?;
+
+    println!("START PARALLEL");
+
+    send_request_parallel(&search_config, &secrets)?;
+
+    println!("END PARALLEL");
+
+    Ok(0)
+}
+
+fn get_token(search_config: &Arc<config::Config>,secrets: &mut Vec<String>) -> Result<i32, i32>{
     for oauth_config_setting in &search_config.oauth {
         let count = oauth_config_setting.count;
         let client_secret = &oauth_config_setting.client_secret;
@@ -47,8 +58,11 @@ pub fn request() -> Result<i32, i32> {
 
         secrets.push(secret);
     }
+    Ok(0)
+}
 
-    println!("START PARALLEL");
+fn send_request_parallel(search_config: &Arc<config::Config>,secrets: &Vec<String>) -> Result<i32, i32> {
+    let mut results: Vec<std::thread::JoinHandle<Result<i32, i32>>> = Vec::new();
 
     for set_oauth_config_setting in &search_config.oauth {
         let config = search_config.clone();
@@ -81,8 +95,5 @@ pub fn request() -> Result<i32, i32> {
             }
         }
     }
-
-    println!("END PARALLEL");
-
     Ok(0)
 }
