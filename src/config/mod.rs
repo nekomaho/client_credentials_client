@@ -19,11 +19,16 @@ pub struct Config {
 const CONFIG_FILE: &str = "client_credentials_client.yml";
 
 impl Config {
-    pub fn new() -> Result<Self, i32> {
-        let config_content = match fs::read_to_string(CONFIG_FILE) {
+    pub fn new(config_file: &str) -> Result<Self, i32> {
+        let config_file_name = match config_file {
+            "" => CONFIG_FILE,
+            _ => config_file
+        };
+
+        let config_content = match fs::read_to_string(config_file_name) {
             Ok(result) => result,
             Err(_) => {
-                println!("Need {} at current directory", CONFIG_FILE);
+                println!("Not found {}", config_file_name);
                 return Err(1);
             }
         };
@@ -31,7 +36,7 @@ impl Config {
         let config_yaml = match YamlLoader::load_from_str(&config_content) {
             Ok(result) => result,
             Err(_) => {
-                println!("Cannot parse {}", CONFIG_FILE);
+                println!("Cannot parse {}", config_file_name);
                 return Err(1);
             }
         };

@@ -9,8 +9,8 @@ use oauth2::{AuthUrl, ClientId, ClientSecret, Scope, TokenResponse, TokenUrl};
 use std::sync::Arc;
 use std::thread;
 
-pub fn request() -> Result<i32, i32> {
-    let search_config = Arc::new(config::Config::new()?);
+pub fn request(config_file_name: &str) -> Result<i32, i32> {
+    let search_config = Arc::new(config::Config::new(config_file_name)?);
     let mut secrets: Vec<String> = Vec::new();
 
     get_token(&search_config, &mut secrets)?;

@@ -12,3 +12,4 @@ reqwest = { version = "0.10", features = ["json"] }
 tokio = { version = "0.2", features = ["full"] }
 yaml-rust = "0.4"
 colored = "2"
+clap = "3.0.0-beta.1"
