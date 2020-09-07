@@ -76,5 +76,11 @@ END: client2 phase
 END PARALLEL
 ```
 
+If you want to set custom configuration files, you can set -c option.
+
+```bash
+$ client_credentials_client -c your/config/file/path
+```
+
 # License
 This software is available as open source under the terms of the MIT License.
