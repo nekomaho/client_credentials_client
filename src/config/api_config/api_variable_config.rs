@@ -24,7 +24,7 @@ impl ApiVariableConfig {
             let api_variable_config = ApiVariableConfig::new(
                 &ApiVariableConfig::fetch_value(&variable_config, &vec!["name"])?,
                 &ApiVariableConfig::fetch_value(&variable_config, &vec!["url"])?,
-                &ApiVariableConfig::fetch_value(&variable_config, &vec!["body"])?,
+                &ApiVariableConfig::fetch_value_allow_empty(&variable_config, &vec!["body"]),
             );
             api_variable_configs.push(api_variable_config);
         }
