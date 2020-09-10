@@ -185,6 +185,7 @@ version = "0.1.0"
 dependencies = [
  "clap",
  "colored",
+ "linked-hash-map",
  "oauth2",
  "reqwest 0.10.7",
  "tokio 0.2.22",
