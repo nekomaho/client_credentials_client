@@ -40,3 +40,58 @@ impl ApiVariableConfig {
         }
     }
 }
+
+#[cfg(test)]
+mod tests{
+    use super::*;
+
+    #[test]
+    fn create_api_variable_config_when_variable_array_is_only_one() {
+        let config_yaml = yaml_rust::yaml::YamlLoader::load_from_str(r#"
+        variable:
+          - name: client1
+            url: http://localhost/path/to/api
+            body: "{\"test\":\"client1\"}"
+        "#).unwrap();
+
+        let result = ApiVariableConfig::load(&config_yaml[0]).unwrap();
+        assert_eq!("client1".to_string(), result[0].name);
+        assert_eq!("http://localhost/path/to/api".to_string(), result[0].url);
+        assert_eq!("{\"test\":\"client1\"}".to_string(), result[0].body);
+    }
+
+    #[test]
+    fn create_api_variable_config_when_variable_array_is_multiple() {
+        let config_yaml = yaml_rust::yaml::YamlLoader::load_from_str(r#"
+        variable:
+          - name: client1
+            url: http://localhost/path/to/api
+            body: "{\"test\":\"client1\"}"
+          - name: client2
+            url: http://localhost/path/to/api2
+            body: "{\"test\":\"client2\"}"
+        "#).unwrap();
+
+        let result = ApiVariableConfig::load(&config_yaml[0]).unwrap();
+        assert_eq!("client1".to_string(), result[0].name);
+        assert_eq!("http://localhost/path/to/api".to_string(), result[0].url);
+        assert_eq!("{\"test\":\"client1\"}".to_string(), result[0].body);
+        assert_eq!("client2".to_string(), result[1].name);
+        assert_eq!("http://localhost/path/to/api2".to_string(), result[1].url);
+        assert_eq!("{\"test\":\"client2\"}".to_string(), result[1].body);
+    }
+
+    #[test]
+    fn create_api_variable_config_when_body_is_not_define() {
+        let config_yaml = yaml_rust::yaml::YamlLoader::load_from_str(r#"
+        variable:
+          - name: client1
+            url: http://localhost/path/to/api
+        "#).unwrap();
+
+        let result = ApiVariableConfig::load(&config_yaml[0]).unwrap();
+        assert_eq!("client1".to_string(), result[0].name);
+        assert_eq!("http://localhost/path/to/api".to_string(), result[0].url);
+        assert_eq!("".to_string(), result[0].body);
+    }
+}
