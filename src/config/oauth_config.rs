@@ -78,3 +78,62 @@ impl OauthConfig {
         }
     }
 }
+
+#[cfg(test)]
+mod test{
+    use super::*;
+    use std::env::set_var;
+
+    #[test]
+    fn load_oauth_values_when_env_is_false() {
+        let config_yaml = yaml_rust::yaml::YamlLoader::load_from_str("
+        oauth:
+          - name: test1
+            env: false
+            client_id: id 
+            client_secret: secret 
+          - name: test2
+            env: false
+            client_id: id2
+            client_secret: secret2
+        ").unwrap();
+
+        let result = OauthConfig::load(&config_yaml[0]).unwrap();
+        assert_eq!("test1", result[0].name);
+        assert_eq!("id", result[0].client_id);
+        assert_eq!("secret", result[0].client_secret);
+        assert_eq!("test2", result[1].name);
+        assert_eq!("id2", result[1].client_id);
+        assert_eq!("secret2", result[1].client_secret);
+    }
+
+    #[test]
+    fn load_oauth_values_when_env_is_true() {
+
+        let config_yaml = yaml_rust::yaml::YamlLoader::load_from_str("
+        oauth:
+          - name: test1
+            env: true
+            client_id: TEST_ID1
+            client_secret: TEST_SECRET1
+          - name: test2
+            env: true
+            client_id: TEST_ID2
+            client_secret: TEST_SECRET2
+        ").unwrap();
+
+        set_var("TEST_ID1","id");
+        set_var("TEST_SECRET1","secret");
+        set_var("TEST_ID2","id2");
+        set_var("TEST_SECRET2","secret2");
+
+
+        let result = OauthConfig::load(&config_yaml[0]).unwrap();
+        assert_eq!("test1", result[0].name);
+        assert_eq!("id", result[0].client_id);
+        assert_eq!("secret", result[0].client_secret);
+        assert_eq!("test2", result[1].name);
+        assert_eq!("id2", result[1].client_id);
+        assert_eq!("secret2", result[1].client_secret);
+    }
+}
