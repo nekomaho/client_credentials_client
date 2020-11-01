@@ -50,6 +50,19 @@ fn get_token(search_config: &Arc<config::Config>,secrets: &mut Vec<String>) -> R
             Ok(result) => result.access_token().secret().to_string(),
             Err(err) => {
                 println!("get access token error: {}", err);
+                match err {
+                    oauth2::RequestTokenError::Request(_e) => {
+                        println!("response error: client does not exist or network error");
+                    },
+                    oauth2::RequestTokenError::ServerResponse(e) => {
+                        println!("server return error");
+                        println!("---");
+                        println!("{}", e.error());
+                        println!("{}", e.error_description().unwrap());
+                        println!("---");
+                    },
+                    _ => println!("some error"),
+                }
                 return Err(1);
             }
         };
