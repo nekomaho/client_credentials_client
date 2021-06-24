@@ -53,6 +53,18 @@ api:
        - name: client2
          url: http://localhost/path/to/api
          body: "{\"test\":\"client2\"}"
+  - api_name: get api
+    method: get
+    content_type: application/json
+    # If you don't want to run this section, you can set false to `enable` flag
+    # We can be temporarily disabled without commenting out
+    enable: false
+    variable:
+       # this is same as an `oauth` `name`
+       - name: client1
+         url: http://localhost/path/to/api/1
+       - name: client2
+         url: http://localhost/path/to/api/2
 ```
 ## Execution
 After writing the configuration file, you can send requests in parallel to the specified endpoints as follows.
