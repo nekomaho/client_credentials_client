@@ -9,6 +9,7 @@ pub struct ApiConfig {
     pub api_name: String,
     pub method: String,
     pub content_type: String,
+    pub enable: bool,
     pub variable: HashMap<String, ApiVariableConfig>,
 }
 
@@ -30,6 +31,10 @@ impl ApiConfig {
                 &ApiConfig::fetch_value(&config_element, &vec!["api_name"])?,
                 &ApiConfig::fetch_value(&config_element, &vec!["method"])?,
                 &ApiConfig::fetch_value(&config_element, &vec!["content_type"])?,
+                match &ApiConfig::fetch_value_as_bool(&config_element, &vec!["enable"]) {
+                    Ok(result) => result,
+                    Err(_) => &true
+                },
                 config_element,
             );
             let api_config = match api {
@@ -49,6 +54,7 @@ impl ApiConfig {
         api_name: &str,
         method: &str,
         content_type: &str,
+        enable: &bool,
         config: &yaml_rust::yaml::Yaml,
     ) -> Result<Self, i32> {
         let api_variable_configs = match ApiVariableConfig::load(config) {
@@ -68,6 +74,7 @@ impl ApiConfig {
             api_name: api_name.to_string(),
             method: method.to_string(),
             content_type: content_type.to_string(),
+            enable: enable.clone(),
             variable: api_variable_config_hash,
         })
     }

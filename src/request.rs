@@ -87,9 +87,13 @@ fn send_request_parallel(search_config: &Arc<config::Config>,secrets: &Vec<Strin
             color_println!(count, "START: {} phase", &oauth_config_setting.name);
 
             for api_config in &config.api {
-                color_println!(count, "SEND: {} {}", &oauth_config_setting.name, &api_config.api_name);
-                let api = api::Api::new(&api_config, &secret, &oauth_config_setting.name, count);
-                api.send_request()?;
+                if api_config.enable {
+                    color_println!(count, "SEND: {} {}", &oauth_config_setting.name, &api_config.api_name);
+                    let api = api::Api::new(&api_config, &secret, &oauth_config_setting.name, count);
+                    api.send_request()?;
+                } else {
+                    color_println!(count, "SKIP: {} {}", &oauth_config_setting.name, &api_config.api_name);
+                }
             }
 
             color_println!(count, "END: {} phase", &oauth_config_setting.name);
